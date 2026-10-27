@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>FrameWise · 스마트 카메라 시제품</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;background:#101316;color:#f6f7f8}*{box-sizing:border-box}body{margin:0}.app{max-width:950px;min-height:100dvh;margin:auto;display:flex;flex-direction:column;padding:16px;gap:12px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.top h1{margin:0;font-size:19px}.top small{color:#9ba8b1}.pill{font-size:11px;border:1px solid #557466;padding:5px 9px;border-radius:20px;color:#a9f2c9}.stage{position:relative;background:#050606;flex:1;min-height:330px;max-height:72dvh;aspect-ratio:3/4;border-radius:22px;overflow:hidden;display:grid;place-items:center;border:1px solid #293037}.stage canvas{width:100%;height:100%;object-fit:contain}.overlay{position:absolute;inset:0;pointer-events:none}.gridline{position:absolute;background:rgba(255,255,255,.38)}.v{width:1px;top:0;bottom:0}.h{height:1px;left:0;right:0}.v.a{left:33.333%}.v.b{left:66.667%}.h.a{top:33.333%}.h.b{top:66.667%}.target{width:20px;height:20px;border:2px solid #72f0b4;border-radius:50%;position:absolute;transform:translate(-50%,-50%);display:none;box-shadow:0 0 0 4px #0005}.level{position:absolute;top:48%;left:50%;width:86px;height:2px;background:#eee9;transform:translate(-50%,-50%)}.level::after{content:"";position:absolute;width:12px;height:12px;border:2px solid #8fe0d7;border-radius:50%;top:-5px;left:calc(50% - 6px)}.hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);text-align:center;background:#070c0dbb;border:1px solid #47514f;border-radius:16px;padding:11px 14px;font-size:14px;line-height:1.4;backdrop-filter:blur(8px)}.corner{position:absolute;top:16px;left:16px;font-size:12px;background:#070c0dbb;padding:8px 10px;border-radius:10px}.controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px}button{border:1px solid #39434c;color:#f5f8fb;background:#20282e;border-radius:13px;padding:11px 15px;font:inherit;font-weight:600;cursor:pointer}button.primary{background:#a9f0cd;color:#083324;border:0}button.capture{height:68px;width:68px;border-radius:50%;background:#f7fcfa;border:6px solid #233c35;box-shadow:0 0 0 2px #f7fcfa;color:#121917;padding:0}button:disabled{opacity:.45;cursor:not-allowed}.info{font-size:13px;line-height:1.6;color:#a7b1b9}.status{color:#a9f0cd}a{color:#a9f0cd}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.toggle{font-size:13px}.hidden{display:none!important}#video{display:none}.guide{background:#1b2328;border-radius:14px;padding:13px;color:#c7d0d7;font-size:13px;line-height:1.6}#download{display:none;text-decoration:none;background:#bcefd6;color:#183228;border-radius:12px;padding:11px 15px;font-weight:700}input[type=checkbox]{accent-color:#a9f0cd} @media(min-width:650px){.stage{min-height:500px;aspect-ratio:4/3}}
+</style>
+</head>
+<body>
+<main class="app">
+ <header class="top"><div><h1>FrameWise <span style="font-weight:400;color:#9fafba">Camera</span></h1><small>촬영 구도 코치 + 자동 보정 · 브라우저 시제품</small></div><span class="pill">LOCAL PROCESSING</span></header>
+ <section class="stage" id="stage" aria-label="카메라 미리보기. 화면을 탭해 피사체 위치를 지정하세요.">
+  <video id="video" autoplay playsinline muted></video><canvas id="preview" width="720" height="960"></canvas>
+  <div class="overlay" id="overlay"><div class="gridline v a"></div><div class="gridline v b"></div><div class="gridline h a"></div><div class="gridline h b"></div><div class="target" id="target"></div><div class="level" id="level"></div></div>
+  <div class="corner" id="indicator">카메라 꺼짐</div>
+  <div class="hint" id="hint">카메라를 시작한 뒤 피사체를 화면에서 터치하면 삼분할 구도 안내가 나와요.</div>
+ </section>
+ <div class="controls"><button id="start" class="primary">카메라 켜기</button><button id="flip" disabled>전·후면 전환</button><button id="tilt">수평계 켜기</button><button id="shot" class="capture" disabled aria-label="사진 촬영"></button><a id="download" download="framewise-photo.jpg">사진 저장</a></div>
+ <div class="row"><label class="toggle"><input id="enhance" type="checkbox" checked> 자동 색감·밝기 보정</label><label class="toggle"><input id="guides" type="checkbox" checked> 구도 격자</label></div>
+ <div class="guide"><strong>사용법</strong> · ① 카메라 켜기 ② 촬영할 사람·물체를 화면에서 탭하기 ③ 안내에 맞춰 좌우 구도 조정 ④ 동그란 촬영 버튼 누르기. 수평계는 기기 센서 권한이 있어야 작동해요. 탭 위치를 기준으로 구도를 추천하는 초기 버전이며, 피사체를 AI로 자동 인식하는 기능은 아직 없어요.</div>
+ <div class="info" id="message">카메라 권한이 필요해요. 카메라는 HTTPS 사이트 또는 localhost에서 작동하며 파일을 그냥 열면 제한될 수 있어요. 사진은 서버에 업로드하지 않고 기기에서 처리합니다.</div>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const video=$('video'),canvas=$('preview'),ctx=canvas.getContext('2d',{willReadFrequently:true});
+let stream=null, facing='environment',active=false,lastFrame=0,subject=null,angle=null,hasTilt=false,photoUrl=null;
+const msg=s=>$('message').textContent=s;
+const hint=s=>$('hint').textContent=s;
+function sizeCanvas(){
+ if(!video.videoWidth)return;
+ // Keep the processed image at a reasonable resolution to avoid excessive CPU use.
+ const ratio=video.videoWidth/video.videoHeight;
+ const maxW=Math.min(960,video.videoWidth);
+ const w=Math.max(1,Math.round(maxW));
+ const h=Math.max(1,Math.round(w/ratio));
+ if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+}
+function enhancement(){
+ // Fast statistical exposure estimate from a small grid; avoids uploading data.
+ const w=canvas.width,h=canvas.height;
+ const sw=32,sh=24;
+ const sample=document.createElement('canvas');sample.width=sw;sample.height=sh;
+ const sc=sample.getContext('2d',{willReadFrequently:true});sc.drawImage(video,0,0,sw,sh);
+ const d=sc.getImageData(0,0,sw,sh).data;let sum=0,n=0;
+ for(let i=0;i<d.length;i+=16){sum+=(d[i]*.2126+d[i+1]*.7152+d[i+2]*.0722);n++}
+ const average=sum/(n||1);
+ const brightness=Math.max(0.90,Math.min(1.22,118/Math.max(average,55)));
+ return `brightness(${brightness.toFixed(3)}) contrast(1.075) saturate(1.10)`;
+}
+function draw(ts){
+ if(!active)return;
+ requestAnimationFrame(draw);
+ if(ts-lastFrame<50 || video.readyState<2)return;lastFrame=ts;
+ sizeCanvas();ctx.save();ctx.filter=$('enhance').checked?enhancement():'none';ctx.drawImage(video,0,0,canvas.width,canvas.height);ctx.restore();
+}
+async function start(){
+ if(!navigator.mediaDevices?.getUserMedia){msg('이 브라우저에서는 카메라를 사용할 수 없어요. HTTPS 주소 또는 localhost에서 실행해 주세요.');return;}
+ try{
+  active=false;stream?.getTracks().forEach(t=>t.stop());
+  stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:960}}});
+  video.srcObject=stream;await video.play();active=true;lastFrame=0;
+  requestAnimationFrame(draw);$('shot').disabled=false;$('flip').disabled=false;$('start').textContent='다시 시작';
+  $('indicator').textContent=(facing==='environment'?'후면':'전면')+' 카메라 · 미리보기';
+  msg('카메라 작동 중. 화면을 탭해서 주요 피사체 위치를 지정하세요.');
+  hint('사람이나 사물을 탭해서 구도 추천을 받아보세요.');
+ }catch(e){msg('카메라 접근 실패: '+e.message+'. 브라우저 권한과 HTTPS 여부를 확인해 주세요.');}
+}
+$('start').onclick=start;
+$('flip').onclick=()=>{facing=facing==='environment'?'user':'environment';subject=null;$('target').style.display='none';start();};
+$('guides').onchange=e=>$('overlay').querySelectorAll('.gridline').forEach(el=>el.style.display=e.target.checked?'':'none');
+$('stage').addEventListener('click',e=>{
+ if(!active)return;
+ const bounds=canvas.getBoundingClientRect();
+ // canvas image uses object-fit contain: translate pointer using the actual rendered content rect
+ const ratio=canvas.width/canvas.height,boxratio=bounds.width/bounds.height;
+ let dw,dh,ox,oy;
+ if(boxratio>ratio){dh=bounds.height;dw=dh*ratio;ox=(bounds.width-dw)/2;oy=0}
+ else {dw=bounds.width;dh=dw/ratio;ox=0;oy=(bounds.height-dh)/2}
+ const x=(e.clientX-bounds.left-ox)/dw,y=(e.clientY-bounds.top-oy)/dh;
+ if(x<0||x>1||y<0||y>1)return;
+ subject={x,y};const t=$('target');t.style.display='block';
+ t.style.left=`${(ox+x*dw)/bounds.width*100}%`;t.style.top=`${(oy+y*dh)/bounds.height*100}%`;
+ suggest();
+});
+function suggest(){
+ if(!subject)return;
+ // Select the nearest vertical third, and center height for a simple rule-of-thirds recommendation.
+ const thirds=[1/3,2/3],tx=thirds.reduce((a,b)=>Math.abs(b-subject.x)<Math.abs(a-subject.x)?b:a);
+ const dx=(tx-subject.x)*100;
+ let direction=Math.abs(dx)<4?'가로 위치가 좋아요.':dx>0?`피사체가 오른쪽 삼분할선에 오도록 화면 구도를 약 ${Math.round(Math.abs(dx))}% 조정해 보세요.`:`피사체가 왼쪽 삼분할선에 오도록 화면 구도를 약 ${Math.round(Math.abs(dx))}% 조정해 보세요.`;
+ if(hasTilt && angle!==null)direction+=' '+(Math.abs(angle)<1.5?'수평도 좋아요.':`휴대폰 기울기 약 ${Math.round(Math.abs(angle))}°를 줄여보세요.`);
+ hint(direction);
+}
+async function enableTilt(){
+ if(!('DeviceOrientationEvent' in window)){msg('이 기기나 브라우저는 방향 센서를 지원하지 않아요.');return;}
+ try{
+  if(typeof DeviceOrientationEvent.requestPermission==='function'){
+   const result=await DeviceOrientationEvent.requestPermission();if(result!=='granted'){msg('방향 센서 권한을 허용해야 수평계가 작동해요.');return;}
+  }
+  window.addEventListener('deviceorientation',e=>{
+   if(e.gamma===null)return;
+   // gamma is only an approximate roll indicator in a typical portrait device orientation.
+   angle=Math.max(-45,Math.min(45,e.gamma));hasTilt=true;
+   $('level').style.transform=`translate(-50%,-50%) rotate(${-angle}deg)`;
+   $('level').style.background=Math.abs(angle)<1.5?'#8bf2ba':'rgba(255,255,255,.75)';
+   if(subject)suggest();else hint(Math.abs(angle)<1.5?'수평이 맞아요. 피사체를 터치해 구도를 정해보세요.':`기기를 ${Math.abs(angle).toFixed(0)}° 정도 반대로 기울여 수평을 맞춰보세요.`);
+  },{passive:true});
+  msg('수평계 요청 완료. 기기가 기울어지면 화면 가이드가 움직여요.');
+ }catch(e){msg('수평계 권한 오류: '+e.message)}
+}
+$('tilt').onclick=enableTilt;
+$('shot').onclick=()=>{
+ if(!active)return;
+ canvas.toBlob(blob=>{
+  if(!blob){msg('사진 변환에 실패했어요.');return;}
+  if(photoUrl)URL.revokeObjectURL(photoUrl);photoUrl=URL.createObjectURL(blob);
+  const a=$('download');a.href=photoUrl;a.style.display='inline-block';
+  msg('사진 촬영 완료! ‘사진 저장’을 눌러 JPEG를 저장하세요. 일부 iPhone 브라우저에서는 저장 대신 공유 화면이 열릴 수 있어요.');
+ },'image/jpeg',.92);
+};
+window.addEventListener('pagehide',()=>{active=false;stream?.getTracks().forEach(t=>t.stop());if(photoUrl)URL.revokeObjectURL(photoUrl)});
+</script>
+</body>
+</html>
